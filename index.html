@@ -417,15 +417,35 @@
      JAVASCRIPT
 ══════════════════════════════════════════════ -->
 <script>
-  /* ── Read guest name from URL (?name=...) ──────────────── */
-  const params    = new URLSearchParams(window.location.search);
-  const rawName   = params.get('name') || '';
-  const guestName = rawName
-    .trim()
-    .replace(/[<>"'`]/g, '')          // basic XSS sanitisation
-    .replace(/\b\w/g, c => c.toUpperCase()); // title-case
+  /*
+    ── Read guest name ─────────────────────────────────────
+    Tries three sources in order:
+      1. ?name=  query string  (standard: /index.html?name=Kamal)
+      2. #name=  hash fragment (fallback: /index.html#name=Kamal)
+         → useful when Netlify strips query strings on redirects
+      3. Falls back to "Guest"
+  */
+  function getGuestName() {
+    // 1. Query string
+    const qs = new URLSearchParams(window.location.search);
+    if (qs.get('name')) return qs.get('name');
 
-  const displayName = guestName || 'Guest';
+    // 2. Hash fragment  e.g.  #name=Kamal  or  #?name=Kamal
+    const hash = window.location.hash.replace(/^#\??/, '');
+    const hs   = new URLSearchParams(hash);
+    if (hs.get('name')) return hs.get('name');
+
+    return '';
+  }
+
+  function sanitise(raw) {
+    return raw
+      .trim()
+      .replace(/[<>"'`]/g, '')
+      .replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  const displayName = sanitise(getGuestName()) || 'Guest';
 
   /* ── Inject greeting ──────────────────────────────────── */
   document.getElementById('greeting').innerHTML =

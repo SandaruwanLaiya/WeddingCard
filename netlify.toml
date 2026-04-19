@@ -1,0 +1,18 @@
+# Netlify configuration for Lahiru & Lakshani wedding invitation
+# Prevents Netlify from stripping query parameters (?name=...) during redirects.
+
+[build]
+  publish = "."
+
+[[redirects]]
+  from   = "/"
+  to     = "/index.html"
+  status = 200
+  force  = false
+
+# Preserve query strings on all routes
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    Cache-Control   = "public, max-age=3600"
